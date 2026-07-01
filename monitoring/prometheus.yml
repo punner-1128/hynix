@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - backend:8080
+
+  - job_name: mongodb-exporter-1
+    static_configs:
+      - targets:
+          - mongodb-exporter-1:9216
+
+  - job_name: mongodb-exporter-2
+    static_configs:
+      - targets:
+          - mongodb-exporter-2:9216
+
+  - job_name: mongodb-exporter-3
+    static_configs:
+      - targets:
+          - mongodb-exporter-3:9216

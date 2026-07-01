@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+frontend/.next/
+frontend/node_modules/
+frontend/npm-debug.log*
+frontend/tsconfig.tsbuildinfo
+
+backend/.gradle/
+backend/build/
+
+*.log

@@ -1,0 +1,157 @@
+name: mongo-admin
+
+networks:
+  mongo-admin-net:
+    driver: bridge
+
+volumes:
+  mongo-admin-data:
+  mongo-data1:
+  mongo-data2:
+  mongo-data3:
+  prometheus-data:
+  grafana-data:
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "9112:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:9113
+      API_INTERNAL_URL: http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "9113:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://admin:admin1234@mongo-admin:27017/admindb?authSource=admin
+      JWT_SECRET: change-this-development-secret
+    depends_on:
+      - mongo-admin
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongo-admin:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-admin-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin1234
+      MONGO_INITDB_DATABASE: admindb
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongo-data-1:
+    image: mongo:7.0
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data1:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin1234
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongo-data-2:
+    image: mongo:7.0
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo-data2:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin1234
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongo-data-3:
+    image: mongo:7.0
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongo-data3:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin1234
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongodb-exporter-1:
+    image: percona/mongodb_exporter:latest
+    command:
+      - --mongodb.uri=mongodb://admin:admin1234@mongo-data-1:27017/admin?authSource=admin
+    depends_on:
+      - mongo-data-1
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongodb-exporter-2:
+    image: percona/mongodb_exporter:latest
+    command:
+      - --mongodb.uri=mongodb://admin:admin1234@mongo-data-2:27017/admin?authSource=admin
+    depends_on:
+      - mongo-data-2
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  mongodb-exporter-3:
+    image: percona/mongodb_exporter:latest
+    command:
+      - --mongodb.uri=mongodb://admin:admin1234@mongo-data-3:27017/admin?authSource=admin
+    depends_on:
+      - mongo-data-3
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9115:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - backend
+      - mongodb-exporter-1
+      - mongodb-exporter-2
+      - mongodb-exporter-3
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "9114:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin1234
+    depends_on:
+      - prometheus
+    networks:
+      - mongo-admin-net
+    restart: unless-stopped
