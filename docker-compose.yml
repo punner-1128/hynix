@@ -97,7 +97,7 @@ services:
     restart: unless-stopped
 
   mongodb-exporter-1:
-    image: percona/mongodb_exporter:latest
+    image: percona/mongodb_exporter:0.47.1
     command:
       - --mongodb.uri=mongodb://admin:admin1234@mongo-data-1:27017/admin?authSource=admin
     depends_on:
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
 
   mongodb-exporter-2:
-    image: percona/mongodb_exporter:latest
+    image: percona/mongodb_exporter:0.47.1
     command:
       - --mongodb.uri=mongodb://admin:admin1234@mongo-data-2:27017/admin?authSource=admin
     depends_on:
@@ -117,7 +117,7 @@ services:
     restart: unless-stopped
 
   mongodb-exporter-3:
-    image: percona/mongodb_exporter:latest
+    image: percona/mongodb_exporter:0.47.1
     command:
       - --mongodb.uri=mongodb://admin:admin1234@mongo-data-3:27017/admin?authSource=admin
     depends_on:
